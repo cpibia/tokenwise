@@ -57,7 +57,7 @@ export const COPY: Record<Language, Copy> = {
     clearFallback: '/clear is in the prompt box: press Enter, then recall your request with ↑',
     modelNote: (name, id) =>
       `The tokenwise mod switched this request to ${name} (ID ${id}). The system prompt still names the session's model because it was composed before the switch; for your model's name and any Co-Authored-By line, this note applies.`,
-    status: level => `tokenwise: ${level}`,
+    status: level => level,
     subagent: (description, level, reason) => `subagent «${description}» on ${level}${reasonSuffix(reason)}`,
     command: 'Model, effort and context advice: on, off, reset, status',
     on: 'tokenwise is on: effort is set on its own, model switches and fresh starts are asked first.',
@@ -90,7 +90,7 @@ export const COPY: Record<Language, Copy> = {
     clearFallback: '/clear è nella casella: premi Invio, poi recupera la richiesta con ↑',
     modelNote: (name, id) =>
       `Il mod tokenwise ha spostato questa richiesta su ${name} (ID ${id}). Il prompt di sistema nomina ancora il modello della sessione perché è stato composto prima del cambio; per il nome del tuo modello e per le righe Co-Authored-By vale questa nota.`,
-    status: level => `tokenwise: ${level}`,
+    status: level => level,
     subagent: (description, level, reason) => `sotto-agente «${description}» su ${level}${reasonSuffix(reason)}`,
     command: 'Consigli su modello, effort e contesto: on, off, reset, status',
     on: "tokenwise acceso: l'effort lo regolo da solo, cambi di modello e ripartenze li chiedo prima.",
