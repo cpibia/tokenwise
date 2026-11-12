@@ -1,0 +1,13 @@
+{
+  "name": "tokenwise",
+  "description": "tokenwise: model, effort and context advice for Claude Code",
+  "owner": {
+    "name": "Cristian Pibia"
+  },
+  "plugins": [
+    {
+      "name": "tokenwise",
+      "source": "./"
+    }
+  ]
+}

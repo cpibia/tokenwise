@@ -1,0 +1,58 @@
+{
+  "name": "tokenwise",
+  "version": "1.0.0",
+  "description": "Spends tokens where the work needs them: sizes each request, sets model and effort to match, escalates when a result has to be redone, and offers a clean start when a new task arrives on a heavy context. English and Italian.",
+  "author": {
+    "name": "Cristian Pibia"
+  },
+  "license": "MIT",
+  "keywords": [
+    "model",
+    "effort",
+    "context",
+    "cost",
+    "tokens"
+  ],
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Language",
+      "description": "Language of the questions and of the classifier's instructions. auto follows the language Claude Code is set to.",
+      "options": [
+        "auto",
+        "en",
+        "it"
+      ],
+      "default": "auto"
+    },
+    "classifierModel": {
+      "type": "string",
+      "title": "Classifier model",
+      "description": "The model that sizes each request. sonnet is more accurate; haiku costs about a twentieth and answers faster.",
+      "options": [
+        "sonnet",
+        "haiku"
+      ],
+      "default": "sonnet"
+    },
+    "freshStart": {
+      "type": "string",
+      "title": "Offer a clean start above",
+      "description": "Context size above which a new task, or a return after an hour away, brings the offer to clear or compact before sending the request. off never offers it.",
+      "options": [
+        "off",
+        "80k",
+        "120k",
+        "160k"
+      ],
+      "default": "120k"
+    },
+    "profile": {
+      "type": "string",
+      "title": "Your work and tools",
+      "description": "Optional. A few lines about your work, sent to the classifier with every request so it weighs them better. For example: I build Laravel apps and deploy on Coolify; anything touching production or client data is serious work. At most 1,000 characters.",
+      "default": ""
+    }
+  },
+  "icon": "./.claude-plugin/icon.png"
+}
