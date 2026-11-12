@@ -159,10 +159,11 @@ async function conversationTail($: EngineInterface): Promise<{ reply: string; qu
   }
 }
 
-function view(sessionModel: string): SessionView {
+function view(sessionModel: string, contextTokens = 0): SessionView {
   return {
     sessionModel,
     sessionEffort: session.sessionEffort,
+    contextTokens,
     active: session.active,
     settled: session.settled,
     recentTiers: session.recentTiers,
@@ -393,8 +394,8 @@ export const register: Register = (on, options) => {
       return next(e)
     }
 
+    const tokens = (await $.session.usage()).context.tokens ?? 0
     if (!isResubmit) {
-      const tokens = (await $.session.usage()).context.tokens ?? 0
       const reason = freshStartReason({ contextTokens: tokens, threshold: settings.freshStartTokens, newTopic: assessment.newTopic, idleMs })
       if (reason) {
         const choice = await offerFreshStart($, reason, tokens)
@@ -415,7 +416,7 @@ export const register: Register = (on, options) => {
 
     const sessionModel = await $.session.model()
     const modelBefore = session.active?.model ?? sessionModel
-    const decision = plan(view(sessionModel), assessment)
+    const decision = plan(view(sessionModel, tokens), assessment)
     const outcome = await carryOut($, decision, assessment, sessionModel)
     remember(decision.tier)
     await record($, {

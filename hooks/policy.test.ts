@@ -6,11 +6,13 @@ import { displayName, effortOn } from './tiers'
 
 const OPUS = 'claude-opus-5-5'
 const SONNET = 'claude-sonnet-5-5'
+const HAIKU = 'claude-haiku-5-5'
 
 function sessionOn(model: string, overrides: Partial<SessionView> = {}): SessionView {
   return {
     sessionModel: model,
     sessionEffort: 'medium',
+    contextTokens: 30_000,
     active: null,
     settled: true,
     recentTiers: [],
@@ -72,13 +74,44 @@ describe('plan', () => {
     expect(decision.kind === 'ask' && decision.recommended.model).toBe('claude-fable-5-2')
   })
 
-  test('a light opening never settles the session on Haiku', () => {
-    const decision = plan(sessionOn(OPUS, { settled: false }), assessed(1))
-    expect(decision.kind === 'apply' && decision.level.model).toBe(OPUS)
+  test('a light opening runs on Haiku without settling the session there', () => {
+    const view = sessionOn(OPUS, { settled: false })
+    expect(plan(view, assessed(2))).toEqual({
+      kind: 'apply',
+      tier: 2,
+      level: { model: HAIKU, effort: 'medium' },
+      note: 'lighter model for a light request',
+    })
+    const next = plan({ ...view, active: { model: HAIKU, effort: 'medium' }, recentTiers: [2] }, assessed(5))
+    expect(next.kind === 'apply' && next.level).toEqual({ model: OPUS, effort: 'medium' })
+  })
+
+  test('work after a light request goes back to the session model without asking', () => {
+    const view = sessionOn(SONNET, { active: { model: HAIKU, effort: 'low' }, recentTiers: [1] })
+    expect(plan(view, assessed(4))).toEqual({
+      kind: 'apply',
+      tier: 4,
+      level: { model: SONNET, effort: 'high' },
+      note: 'back to a stronger model',
+    })
+  })
+
+  test('a light request in the middle of heavy work waits before moving to Haiku', () => {
+    const view = sessionOn(OPUS, { sessionEffort: 'high', recentTiers: [6] })
+    expect(plan(view, assessed(2)).kind).toBe('stay')
+    const decision = plan({ ...view, recentTiers: [6, 2] }, assessed(2))
+    expect(decision.kind === 'apply' && decision.level.model).toBe(HAIKU)
+  })
+
+  test('a large context or a redo keeps light requests on the session model', () => {
+    const large = plan(sessionOn(OPUS, { contextTokens: 150_000 }), assessed(1))
+    expect(large.kind === 'apply' && large.level).toEqual({ model: OPUS, effort: 'low' })
+    const redo = plan(sessionOn(OPUS, { lastRunTier: 1 }), assessed(1, { rework: true }))
+    expect(redo.kind === 'apply' && redo.level.model).toBe(OPUS)
   })
 
   test('the first working request on a weaker model offers Opus for the session', () => {
-    const decision = plan(sessionOn('claude-haiku-5-5', { settled: false }), assessed(4))
+    const decision = plan(sessionOn(HAIKU, { settled: false }), assessed(4))
     expect(decision.kind).toBe('ask')
     if (decision.kind === 'ask') {
       expect(decision.switchesModel).toBe(false)

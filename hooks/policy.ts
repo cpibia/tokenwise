@@ -22,6 +22,7 @@ export type Assessment = {
 export type SessionView = {
   sessionModel: string
   sessionEffort: Effort | null
+  contextTokens: number
   active: Level | null
   settled: boolean
   recentTiers: readonly TierId[]
@@ -34,9 +35,16 @@ export type Plan =
   | { kind: 'apply'; tier: TierId; level: Level; note: string }
   | { kind: 'ask'; tier: TierId; recommended: Level; fallback: Level; wider: Level | null; switchesModel: boolean }
 
-// Below this tier a request is a question or a single command: it does not tell yet which
-// model the session's work needs, so it never settles the session on Haiku.
+// Up to this tier a request is a question or a single command: it runs on Haiku when that
+// pays off, and it does not settle the session, so the next working request is sized from the
+// model the person started with.
 const LIGHT_TIER = 2
+
+// Haiku 5.5 bills prompts above 100K tokens at five times the base rate. Below it, writing the
+// context to Haiku's cache costs about what a cache read on Opus does, and output is 40 times
+// cheaper; the stronger model's cache stays warm for the way back.
+const LIGHT_MODEL_MAX_CONTEXT = 100_000
+const LIGHT_MODEL = TIERS[1].model
 
 /**
  * The tier the work needs. When the person says the last result was wrong, the redo runs at
@@ -58,21 +66,38 @@ function isSameLevel(a: { model: string; effort: Effort | null }, b: Level): boo
   return sameFamily(a.model, b.model) && a.effort === b.effort
 }
 
+function isLighter(level: Level, current: { model: string; effort: Effort | null }): boolean {
+  if (!sameFamily(level.model, current.model)) {
+    return isStrongerFamily(current.model, level.model)
+  }
+
+  return current.effort !== null && compareEffort(level.effort, current.effort) < 0
+}
+
 export function plan(view: SessionView, assessment: Assessment): Plan {
   const tier = targetTier(assessment, view)
   const current = currentLevel(view)
 
   if (!view.settled && tier > LIGHT_TIER) {
-    return planOpening(current, tier)
+    return planOpening(view, current, tier)
   }
 
-  const effort = effortOn(current.model, tier)
+  if (tier <= LIGHT_TIER && !assessment.rework && view.contextTokens <= LIGHT_MODEL_MAX_CONTEXT) {
+    const effort = effortOn(LIGHT_MODEL, tier)
+    if (effort !== null) {
+      return planMove(view, current, tier, { model: LIGHT_MODEL, effort })
+    }
+  }
+
+  // After a light request on Haiku, work comes back to the model the person chose without asking.
+  const model = isStrongerFamily(view.sessionModel, current.model) ? view.sessionModel : current.model
+  const effort = effortOn(model, tier)
   if (effort !== null) {
-    return planOnSameModel(view, current, tier, effort)
+    return planMove(view, current, tier, { model, effort })
   }
 
-  const fallback: Level = { model: current.model, effort: ceilingEffort(current.model) }
-  if (view.keptModel !== null && sameFamily(view.keptModel, current.model) && !assessment.rework) {
+  const fallback: Level = { model, effort: ceilingEffort(model) }
+  if (view.keptModel !== null && sameFamily(view.keptModel, model) && !assessment.rework) {
     return isSameLevel(current, fallback)
       ? { kind: 'stay', tier, note: 'kept model, already at its ceiling' }
       : { kind: 'apply', tier, level: fallback, note: 'kept model, effort raised to its ceiling' }
@@ -81,11 +106,11 @@ export function plan(view: SessionView, assessment: Assessment): Plan {
   return { kind: 'ask', tier, recommended: TIERS[tier], fallback, wider: null, switchesModel: true }
 }
 
-function planOpening(current: { model: string; effort: Effort | null }, tier: TierId): Plan {
+function planOpening(view: SessionView, current: { model: string; effort: Effort | null }, tier: TierId): Plan {
+  const home = view.sessionModel
   const recommended = TIERS[tier]
-  if (sameFamily(current.model, recommended.model) || isStrongerFamily(current.model, recommended.model)) {
-    const effort = effortOn(current.model, tier) ?? recommended.effort
-    const level = { model: current.model, effort }
+  if (sameFamily(home, recommended.model) || isStrongerFamily(home, recommended.model)) {
+    const level = { model: home, effort: effortOn(home, tier) ?? recommended.effort }
 
     return isSameLevel(current, level)
       ? { kind: 'stay', tier, note: 'session model already fits' }
@@ -97,28 +122,25 @@ function planOpening(current: { model: string; effort: Effort | null }, tier: Ti
   const opus = TIERS[5].model
   const wider =
     familyOf(recommended.model) === 'sonnet' ? { model: opus, effort: effortOn(opus, tier) ?? 'medium' } : null
-  const fallback = { model: current.model, effort: effortOn(current.model, tier) ?? ceilingEffort(current.model) }
+  const fallback = { model: home, effort: effortOn(home, tier) ?? ceilingEffort(home) }
 
   return { kind: 'ask', tier, recommended, fallback, wider, switchesModel: false }
 }
 
-function planOnSameModel(
-  view: SessionView,
-  current: { model: string; effort: Effort | null },
-  tier: TierId,
-  effort: Effort,
-): Plan {
-  const level = { model: current.model, effort }
+function planMove(view: SessionView, current: { model: string; effort: Effort | null }, tier: TierId, level: Level): Plan {
   if (isSameLevel(current, level)) {
     return { kind: 'stay', tier, note: 'already at the right level' }
   }
 
-  // Effort goes up at once but comes down only after two lighter requests in a row, so a
+  // The level goes up at once but comes down only after two lighter requests in a row, so a
   // quick question in the middle of heavy work does not deflate the next step.
   const previous = view.recentTiers.at(-1)
-  const isLowering = current.effort !== null && compareEffort(effort, current.effort) < 0
+  const isLowering = isLighter(level, current)
   if (isLowering && previous !== undefined && previous > tier) {
-    return { kind: 'stay', tier, note: 'waiting for a second light request before lowering effort' }
+    return { kind: 'stay', tier, note: 'waiting for a second light request before lowering the level' }
+  }
+  if (!sameFamily(level.model, current.model)) {
+    return { kind: 'apply', tier, level, note: isLowering ? 'lighter model for a light request' : 'back to a stronger model' }
   }
 
   return { kind: 'apply', tier, level, note: isLowering ? 'effort lowered' : 'effort raised' }
