@@ -1,0 +1,31 @@
+name: Misjudged request
+description: A request got a tier that was too high or too low
+labels: [classifier]
+body:
+  - type: textarea
+    id: journal
+    attributes:
+      label: Journal line
+      description: From ~/.claude/tokenwise/<date>.jsonl. Remove anything private from the text and cwd fields.
+      render: json
+    validations:
+      required: true
+  - type: dropdown
+    id: expected
+    attributes:
+      label: Tier you expected
+      options: ['1', '2', '3', '4', '5', '6', '7', '8']
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What the request actually needed, and what went wrong at the level it got.
+    validations:
+      required: true
+  - type: textarea
+    id: profile
+    attributes:
+      label: Your work and tools option
+      description: The text of the option, if you set one.
