@@ -88,6 +88,12 @@ The last option is sent to the classifier with every request. A couple of lines 
 - **A short wait before each request starts**, while the classifier answers: usually one or two seconds, never more than 20. If the call fails or times out, the request goes through unchanged.
 - **No call at all** for bare confirmations ("ok", "go ahead", "sì, procedi") after substantial work: they continue at the level already set.
 
+## Data
+
+- **What is sent, and where.** For each request you type, the classifier call sends the request (first 1,500 characters), the end of the last reply (800 characters), a pending question if there is one, and your "Your work and tools" note. For a generic subagent it sends the subagent's description and brief. These calls go through Claude Code's own API client to Anthropic, the same destination as the rest of your session. Nothing is sent anywhere else.
+- **What is stored, and where.** Only the local journal in `~/.claude/tokenwise/` (or under `$CLAUDE_CONFIG_DIR`). It is never uploaded.
+- **What it changes.** The model and effort of your requests and of generic subagents, the model name in the system prompt and attribution lines, and, only after you choose it, a `/clear` or `/compact` followed by resending your request. It reads no files outside its journal and runs no shell commands.
+
 ## Limits
 
 - **The mod API is early access.** Claude Code's function hooks may change between releases, and tokenwise may need an update when they do.
