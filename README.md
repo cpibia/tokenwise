@@ -45,16 +45,16 @@ In long Claude Code sessions most of the cost is not the model you picked: it is
 At the prompt of a terminal session:
 
 ```
-/plugin install tokenwise --marketplace <owner>/tokenwise
+/plugin install tokenwise --marketplace cpibia/tokenwise
 ```
 
 From a shell:
 
 ```
-claude plugin install tokenwise --marketplace <owner>/tokenwise
+claude plugin install tokenwise --marketplace cpibia/tokenwise
 ```
 
-In the desktop app, where `/plugin` does not run: click + next to the prompt box, then Plugins, Add marketplace with `<owner>/tokenwise`, then Add plugin.
+In the desktop app, where `/plugin` does not run: click + next to the prompt box, then Plugins, Add marketplace with `cpibia/tokenwise`, then Add plugin.
 
 To try it from a local folder without installing: `claude --plugin-dir /path/to/tokenwise`.
 

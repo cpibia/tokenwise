@@ -5,6 +5,8 @@
   "author": {
     "name": "Cristian Pibia"
   },
+  "homepage": "https://github.com/cpibia/tokenwise",
+  "repository": "https://github.com/cpibia/tokenwise",
   "license": "MIT",
   "keywords": [
     "model",
