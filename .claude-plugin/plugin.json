@@ -1,6 +1,6 @@
 {
   "name": "tokenwise",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Spends tokens where the work needs them: sizes each request, sets model and effort to match, escalates when a result has to be redone, and offers a clean start when a new task arrives on a heavy context. English and Italian.",
   "author": {
     "name": "Cristian Pibia"
