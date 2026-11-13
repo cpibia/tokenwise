@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Fixed
+
+- The first working request of a session now runs on its tier's level when that is lighter than the session's model (for example Sonnet on a session opened on Opus), and later work returns to that level after a light request on Haiku.
+- Work that needs less than the model in use moves to its tier's model while the context is under 40k tokens, instead of only lowering the effort.
+
 ## [1.0.0] - 2026-11-12
 
 ### Added

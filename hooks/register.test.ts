@@ -93,3 +93,34 @@ test('a light question on an Opus session runs on Haiku', async ($, on) => {
 
   expect(steppedWith).toBe('claude-haiku-5-5')
 })
+
+test('everyday work opening an Opus session runs on Sonnet', async ($, on) => {
+  let steppedWith = ''
+  on('turn.step', async function* (_, e) {
+    steppedWith = `${e.model} ${e.effort}`
+
+    return { turnId: e.turnId, index: e.index, answer: '', toolUses: [] }
+  })
+  on('session.surfaces', () => ({ value: ['terminal' as const] }))
+  on('session.model', () => ({ value: 'claude-opus-5-5' }))
+  on('session.messages', () => ({ value: [] }))
+  on('session.usage', () => ({ value: { startedAt: 0, context: { tokens: 5_000, window: 1_000_000 }, rateLimits: [] } }))
+  on('model.complete', answerWith('{"tier": 4, "reason": "write today\'s reviews", "newTopic": false, "rework": false}'))
+  on('clock.now', () => ({ value: Date.UTC(2026, 10, 12) }))
+  on('config.list', () => ({ value: [] }))
+  on('env.get', () => ({ value: undefined }))
+  on('fs.exists', () => ({ value: false }))
+  on('fs.write', () => ({ value: undefined }))
+  on('ui.status', () => ({ value: undefined }))
+  on('ui.invalidate', () => ({ value: undefined }))
+  on('ui.log', () => ({ value: undefined }))
+  on('prompt.submit', (_, e) => ({ text: e.text }) as never)
+
+  await $.prompt.submit({ text: 'ciao dobbiamo fare le recensioni di oggi', wait: false, origin: { kind: 'composer' } })
+
+  for await (const _ of $.turn.step({ turnId: 'turn-1', index: 0, model: 'claude-opus-5-5', effort: 'medium', messageCount: 1 })) {
+    // The step's chunks are not under test.
+  }
+
+  expect(steppedWith).toBe('claude-sonnet-5-5 high')
+})

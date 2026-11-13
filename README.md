@@ -70,9 +70,11 @@ Requires a Claude Code release with plugin function hooks, and access to the mod
 
 **Adjusts effort on its own.** On the model in use, effort follows the tier with no question asked. It rises at once and comes down only after two lighter requests in a row, so a quick question in the middle of heavy work does not deflate the next step.
 
+**Moves to a lighter model while the context is small.** Below 40k tokens of context, work that needs less than the model in use runs on its tier's model, for example Sonnet for everyday work on a session opened on Opus: re-reading so little without the cache costs less than staying on the stronger model. Above it, the model stays and only the effort comes down. A redo never moves to a lighter model.
+
 **Moves light requests to Haiku.** A question or a single command (tiers 1 and 2) runs on Haiku while the context is under 100k tokens, the band where Haiku 5.5 bills at its base rate. There, writing the context to Haiku's cache costs about what a cache read on Opus does, and its output costs a fortieth of Opus's. The next request that needs more goes back to the model you started with, without asking, and finds its cache still warm. A redo never goes down.
 
-**Asks before switching to a stronger model.** Going above the model you started with mid-conversation makes Claude re-read everything without the prompt cache, so tokenwise proposes it and tells you what it costs. On the first working request of a session the switch is cheap and it simply recommends the right level; when that would be Sonnet it also offers Opus for the whole session, since a preparatory first step is often followed by heavier work.
+**Asks before switching to a stronger model.** Going above the model you started with mid-conversation makes Claude re-read everything without the prompt cache, so tokenwise proposes it and tells you what it costs. On the first working request of a session the switch is cheap: a lighter level, such as Sonnet on a session opened on Opus, is applied at once and becomes the model the session works on; a stronger one is recommended, and when that would be Sonnet it also offers Opus for the whole session, since a preparatory first step is often followed by heavier work.
 
 **Escalates on rework.** When you say the last result is wrong or has to be redone, the redo runs at least one tier above the level that produced it. Repeating a failed attempt at the same level rarely fixes it; this is also the only way the scale reaches Fable for ordinary work.
 

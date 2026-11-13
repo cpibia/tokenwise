@@ -28,6 +28,8 @@ export type SessionView = {
   recentTiers: readonly TierId[]
   lastRunTier: TierId | null
   keptModel: string | null
+  // The model the first working request settled on, when it differs from the session's own.
+  homeModel: string | null
 }
 
 export type Plan =
@@ -45,6 +47,10 @@ const LIGHT_TIER = 2
 // cheaper; the stronger model's cache stays warm for the way back.
 const LIGHT_MODEL_MAX_CONTEXT = 100_000
 const LIGHT_MODEL = TIERS[1].model
+
+// Below this context, re-reading the conversation on another model without the cache costs
+// less than staying on a stronger model than the work needs.
+export const CHEAP_SWITCH_MAX_CONTEXT = 40_000
 
 /**
  * The tier the work needs. When the person says the last result was wrong, the redo runs at
@@ -89,8 +95,14 @@ export function plan(view: SessionView, assessment: Assessment): Plan {
     }
   }
 
-  // After a light request on Haiku, work comes back to the model the person chose without asking.
-  const model = isStrongerFamily(view.sessionModel, current.model) ? view.sessionModel : current.model
+  const recommended = TIERS[tier]
+  if (!assessment.rework && view.contextTokens < CHEAP_SWITCH_MAX_CONTEXT && isStrongerFamily(current.model, recommended.model)) {
+    return planMove(view, current, tier, recommended)
+  }
+
+  // After a light request on Haiku, work comes back to the session's working model without asking.
+  const home = view.homeModel ?? view.sessionModel
+  const model = isStrongerFamily(home, current.model) ? home : current.model
   const effort = effortOn(model, tier)
   if (effort !== null) {
     return planMove(view, current, tier, { model, effort })
@@ -109,12 +121,18 @@ export function plan(view: SessionView, assessment: Assessment): Plan {
 function planOpening(view: SessionView, current: { model: string; effort: Effort | null }, tier: TierId): Plan {
   const home = view.sessionModel
   const recommended = TIERS[tier]
-  if (sameFamily(home, recommended.model) || isStrongerFamily(home, recommended.model)) {
+  if (sameFamily(home, recommended.model)) {
     const level = { model: home, effort: effortOn(home, tier) ?? recommended.effort }
 
     return isSameLevel(current, level)
       ? { kind: 'stay', tier, note: 'session model already fits' }
       : { kind: 'apply', tier, level, note: 'effort set for the session' }
+  }
+  // With an almost empty context, moving down to the tier's model costs nothing to cache.
+  if (isStrongerFamily(home, recommended.model)) {
+    return isSameLevel(current, recommended)
+      ? { kind: 'stay', tier, note: 'tier level already in use' }
+      : { kind: 'apply', tier, level: recommended, note: 'tier level for the session' }
   }
 
   // The first working request is often a preparatory step: offering Opus now avoids a costly

@@ -18,6 +18,7 @@ function sessionOn(model: string, overrides: Partial<SessionView> = {}): Session
     recentTiers: [],
     lastRunTier: null,
     keptModel: null,
+    homeModel: null,
     ...overrides,
   }
 }
@@ -108,6 +109,40 @@ describe('plan', () => {
     expect(large.kind === 'apply' && large.level).toEqual({ model: OPUS, effort: 'low' })
     const redo = plan(sessionOn(OPUS, { lastRunTier: 1 }), assessed(1, { rework: true }))
     expect(redo.kind === 'apply' && redo.level.model).toBe(OPUS)
+  })
+
+  test('the first working request runs on the tier level even below the session model', () => {
+    expect(plan(sessionOn(OPUS, { settled: false }), assessed(4))).toEqual({
+      kind: 'apply',
+      tier: 4,
+      level: { model: SONNET, effort: 'high' },
+      note: 'tier level for the session',
+    })
+  })
+
+  test('work after a light request goes back to the model the session settled on', () => {
+    const view = sessionOn(OPUS, { homeModel: SONNET, active: { model: HAIKU, effort: 'low' }, recentTiers: [1] })
+    expect(plan(view, assessed(4))).toEqual({
+      kind: 'apply',
+      tier: 4,
+      level: { model: SONNET, effort: 'high' },
+      note: 'back to a stronger model',
+    })
+  })
+
+  test('on a small context, lighter work moves to the tier model', () => {
+    const decision = plan(sessionOn(OPUS, { sessionEffort: 'high' }), assessed(4))
+    expect(decision.kind === 'apply' && decision.level).toEqual({ model: SONNET, effort: 'high' })
+  })
+
+  test('on a large context, lighter work keeps its model and lowers the effort', () => {
+    const decision = plan(sessionOn(OPUS, { sessionEffort: 'high', contextTokens: 120_000 }), assessed(4))
+    expect(decision.kind === 'apply' && decision.level).toEqual({ model: OPUS, effort: 'medium' })
+  })
+
+  test('a redo on a small context does not move to a lighter model', () => {
+    const decision = plan(sessionOn(OPUS, { sessionEffort: 'low', lastRunTier: 3 }), assessed(3, { rework: true }))
+    expect(decision.kind === 'apply' && decision.level.model).toBe(OPUS)
   })
 
   test('the first working request on a weaker model offers Opus for the session', () => {

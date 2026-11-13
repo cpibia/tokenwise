@@ -3,7 +3,16 @@ import type { EngineInterface, Register } from 'claude-code'
 import { type AssessmentInput, type Language, buildPrompt, buildSystem, parseAssessment } from './assessor'
 import { COPY, type Copy } from './copy'
 import { journalPath, record } from './journal'
-import { type Assessment, type Plan, type SessionView, currentLevel, freshStartReason, isConfirmation, plan } from './policy'
+import {
+  type Assessment,
+  type Plan,
+  type SessionView,
+  CHEAP_SWITCH_MAX_CONTEXT,
+  currentLevel,
+  freshStartReason,
+  isConfirmation,
+  plan,
+} from './policy'
 import {
   TIERS,
   type Effort,
@@ -44,6 +53,7 @@ type SessionState = {
   recentTiers: TierId[]
   lastRunTier: TierId | null
   keptModel: string | null
+  homeModel: string | null
   sessionEffort: Effort | null
   lastActivityAt: number | null
   resubmit: string | null
@@ -58,6 +68,7 @@ function newSessionState(enabled = true): SessionState {
     recentTiers: [],
     lastRunTier: null,
     keptModel: null,
+    homeModel: null,
     sessionEffort: null,
     lastActivityAt: null,
     resubmit: null,
@@ -169,6 +180,7 @@ function view(sessionModel: string, contextTokens = 0): SessionView {
     recentTiers: session.recentTiers,
     lastRunTier: session.lastRunTier,
     keptModel: session.keptModel,
+    homeModel: session.homeModel,
   }
 }
 
@@ -193,6 +205,13 @@ async function deactivate($: EngineInterface): Promise<void> {
   }
 }
 
+/** The first working request sets the model later work returns to after a light request. */
+function settleHome(tier: TierId, level: Level): void {
+  if (!session.settled && tier > 2) {
+    session.homeModel = level.model
+  }
+}
+
 async function carryOut($: EngineInterface, decision: Plan, assessment: Assessment, sessionModel: string): Promise<string> {
   const text = await copy($)
   const current = currentLevel(view(sessionModel))
@@ -202,6 +221,7 @@ async function carryOut($: EngineInterface, decision: Plan, assessment: Assessme
     return `stays on ${currentName}: ${decision.note}`
   }
   if (decision.kind === 'apply') {
+    settleHome(decision.tier, decision.level)
     await activate($, decision.level, sessionModel)
 
     return `auto: ${currentName} → ${displayName(decision.level.model, decision.level.effort)}`
@@ -212,7 +232,7 @@ async function carryOut($: EngineInterface, decision: Plan, assessment: Assessme
   let question = text.recommend(recommendedName, assessment.reason)
   if (decision.switchesModel) {
     const tokens = (await $.session.usage()).context.tokens ?? 0
-    const cost = tokens < 40_000 ? text.cheapSwitch : text.costlySwitch(Math.round(tokens / 1000))
+    const cost = tokens < CHEAP_SWITCH_MAX_CONTEXT ? text.cheapSwitch : text.costlySwitch(Math.round(tokens / 1000))
     question = text.needsStronger(recommendedName, assessment.reason, cost)
   }
   if (decision.wider) {
@@ -244,6 +264,7 @@ async function carryOut($: EngineInterface, decision: Plan, assessment: Assessme
   if (chosen === decision.fallback) {
     session.keptModel = current.model
   }
+  settleHome(decision.tier, chosen)
   await activate($, chosen, sessionModel)
 
   return `asked for ${recommendedName}: chose ${displayName(chosen.model, chosen.effort)}`
@@ -340,6 +361,7 @@ export const register: Register = (on, options) => {
     if (argument === 'reset') {
       await deactivate($)
       session.keptModel = null
+      session.homeModel = null
       await record($, { kind: 'override', outcome: 'reset by command' })
 
       return { text: text.reset }
@@ -467,6 +489,7 @@ export const register: Register = (on, options) => {
         outcome: `session set to ${displayName(e.model, seen)} over ${displayName(session.active.model, session.active.effort)}`,
       })
       session.sessionEffort = seen
+      session.homeModel = null
       await deactivate($)
 
       return yield* next(e)
