@@ -22,8 +22,8 @@ const SCALE: Record<Language, Record<TierId, string>> = {
     2: 'look up one fact or run one command and report it; summarise what was said',
     3: 'mechanical steps with a known procedure: commit and push, rename, add a line, run an existing script',
     4: 'everyday work with a clear scope: edit a document, small local config change, answer a question by searching the project',
-    5: 'work that needs judgment or is costly to get wrong: implement a feature, write new scripts, deploys, production systems, client data, weighing options',
-    6: 'diagnosing something broken, irreversible operations in production, long unattended work that must be right',
+    5: 'work that needs judgment or is costly to get wrong: implement a feature, write new scripts, deploys, production systems, client data, weighing options, valuations and decisions with money at stake, messages to clients or management',
+    6: 'diagnosing something broken or a behaviour that differs from what was expected, irreversible operations in production, long unattended work that must be right',
     7: 'very long autonomous work, several intermittent defects together, ambiguous causes, architecture decisions, audits',
     8: 'only when tier 7 already failed on this problem, or the reasoning is exceptionally hard (open research problems)',
   },
@@ -32,8 +32,8 @@ const SCALE: Record<Language, Record<TierId, string>> = {
     2: 'leggere un dato o lanciare un comando e riferire; riassumere quanto detto',
     3: 'passi meccanici con procedura nota: commit e push, rinominare, aggiungere una riga, lanciare uno script esistente',
     4: 'lavoro quotidiano con perimetro chiaro: modificare un documento, piccola modifica di configurazione locale, rispondere cercando nel progetto',
-    5: 'lavoro che chiede giudizio o costa se sbagliato: implementare una funzionalità, scrivere script nuovi, deploy, sistemi in produzione, dati dei clienti, valutare opzioni',
-    6: 'diagnosi di qualcosa di rotto, operazioni irreversibili in produzione, lavori lunghi in autonomia da fare bene',
+    5: 'lavoro che chiede giudizio o costa se sbagliato: implementare una funzionalità, scrivere script nuovi, deploy, sistemi in produzione, dati dei clienti, valutare opzioni, stime e decisioni con soldi in gioco, messaggi a clienti o dirigenti',
+    6: 'diagnosi di qualcosa di rotto o di un comportamento diverso da quello atteso, operazioni irreversibili in produzione, lavori lunghi in autonomia da fare bene',
     7: 'lavori autonomi molto lunghi, più difetti intermittenti insieme, cause ambigue, decisioni di architettura, audit',
     8: 'solo se il livello 7 ha già fallito su questo problema, o il ragionamento è eccezionalmente difficile (problemi di ricerca aperti)',
   },
@@ -44,6 +44,7 @@ const RULES: Record<Language, string> = {
 
 Rules:
 - Judge the work the request starts, not the length of its text. A short "yes" weighs as much as the work it approves in the excerpt.
+- Work without code or files weighs the same: an answer the user will act on (a price, an authenticity check, a bid, advice on a decision) is sized by the cost of getting it wrong, not by the tools it needs.
 - Between two tiers, pick the higher one.
 - Requests are often hurried and have typos; they may be in any language.
 - "newTopic": true only if the request starts work unrelated to the excerpt of the conversation (a different project, file set or problem). Follow-ups, fixes and next steps of the same work are false. With no excerpt, false.
@@ -52,6 +53,7 @@ Rules:
 
 Regole:
 - Giudica il lavoro che la richiesta avvia, non la lunghezza del testo. Un "sì" breve vale quanto il lavoro che approva nell'estratto.
+- Il lavoro senza codice né file pesa allo stesso modo: una risposta su cui l'utente agirà (un prezzo, una verifica di autenticità, un'offerta, un consiglio su una decisione) si misura dal costo di sbagliarla, non dagli strumenti che richiede.
 - Tra due livelli, scegli il più alto.
 - Le richieste sono spesso scritte in fretta e con refusi, in qualsiasi lingua.
 - "newTopic": true solo se la richiesta avvia un lavoro scollegato dall'estratto della conversazione (altro progetto, altri file, altro problema). Seguiti, correzioni e passi successivi dello stesso lavoro sono false. Senza estratto, false.

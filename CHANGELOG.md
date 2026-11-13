@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Added
+
+- `/tokenwise eval seed` and `/tokenwise eval`: label past requests from the journal and measure the classifier against them, with exact and within-one-tier accuracy and the direction of its errors.
+
+### Changed
+
+- The journal is one file per session and day (`<date>.<session>.jsonl`), so sessions running side by side no longer overwrite each other's lines.
+- A short go-ahead such as "ok" keeps the previous level only when the last reply asked or proposed something; after finished work it is assessed like any other request.
+
+- The classifier's scale now counts valuations, decisions with money at stake and messages to clients or management as level 5, and a behaviour that differs from what was expected as level 6, and sizes work without code by the cost of a wrong answer. On a hand-labelled set this cut the serious requests sized too low from 15 of 35 to 10.
+
 ### Fixed
 
 - The first working request of a session now runs on its tier's level when that is lighter than the session's model (for example Sonnet on a session opened on Opus), and later work returns to that level after a light request on Haiku.
