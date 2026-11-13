@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'claude-code/testing'
 
 import { parseAssessment } from './assessor'
-import { type Assessment, type SessionView, freshStartReason, isConfirmation, plan, targetTier } from './policy'
+import { type Assessment, type SessionView, awaitsGoAhead, freshStartReason, isConfirmation, plan, targetTier } from './policy'
 import { displayName, effortOn } from './tiers'
 
 const OPUS = 'claude-opus-5-5'
@@ -187,6 +187,18 @@ describe('isConfirmation', () => {
     for (const text of ['ok ma cambia il colore', 'sì?', 'procedi con il deploy in produzione']) {
       expect(isConfirmation(text)).toBe(false)
     }
+  })
+})
+
+describe('awaitsGoAhead', () => {
+  test('a reply ending with a proposal or a pending question waits for a go-ahead', () => {
+    expect(awaitsGoAhead('Ho preparato la migration.\n\nProcedo con il deploy?', '')).toBe(true)
+    expect(awaitsGoAhead('', 'Which branch should I use?')).toBe(true)
+  })
+
+  test('a finished piece of work leaves nothing to approve', () => {
+    expect(awaitsGoAhead('Is it faster? Yes.\n\nDone: the tests pass and the commit is pushed.', '')).toBe(false)
+    expect(awaitsGoAhead('', '')).toBe(false)
   })
 })
 

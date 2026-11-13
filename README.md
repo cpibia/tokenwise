@@ -86,15 +86,17 @@ Requires a Claude Code release with plugin function hooks, and access to the mod
 
 **Keeps Claude informed.** When the model changes, the model name in the system prompt and in `Co-Authored-By` lines is corrected.
 
-**Writes a journal.** Every decision is one line in `~/.claude/tokenwise/<date>.jsonl`, with the tier, the reason and the outcome, so you can check afterwards what it estimated and tune it.
+**Writes a journal.** Every decision is one line in `~/.claude/tokenwise/<date>.<session>.jsonl`, with the tier, the reason and the outcome, so you can check afterwards what it estimated and tune it.
 
 ## Commands
 
 | Command | Effect |
 | ------- | ------ |
-| `/tokenwise` | shows whether it is on, the level in use and today's journal |
+| `/tokenwise` | shows whether it is on, the level in use and this session's journal for today |
 | `/tokenwise off` / `on` | turns it off or on for this session |
 | `/tokenwise reset` | back to the session's own model and effort |
+| `/tokenwise eval seed` | writes up to 200 of your past requests from the journal to `~/.claude/tokenwise/eval.jsonl`, each with `"tier": null` for you to fill in |
+| `/tokenwise eval` | runs the classifier on every labelled line of that file and reports how often it got the tier right, and in which direction it erred |
 | `~ your request` | skips tokenwise for one request |
 
 Picking a model with `/model` or an effort with `/effort` always wins: tokenwise drops its own choice as soon as it sees yours, and logs it as a sign the level was off.
@@ -117,6 +119,7 @@ The last option is sent to the classifier with every request. A couple of lines 
 - **Autonomous runs: one subagent per task.** tokenwise sizes the request you type, not the steps Claude takes on its own. When you hand over several tasks at once, ask Claude to give each task to a subagent: each one is then sized on its own brief, so an easy task runs on Haiku and a hard one on Opus.
 - **Start sessions on Sonnet** if most of your work is everyday coding. tokenwise offers Opus when a request needs it, and on the first working request of a session the switch is cheap.
 - **Read the journal** after a few days. A `reason` you disagree with is a misjudged tier; the "Your work and tools" option is the quickest way to correct it.
+- **Measure before and after a change.** Label a few dozen requests once with `/tokenwise eval seed`, then run `/tokenwise eval` before and after editing "Your work and tools" or switching the classifier model. Below the label means work that may need redoing; above it means spend the work did not need. Seeded lines hold only the first 160 characters of each request and none of the conversation before it, so add `"previousReply"` to a line when the request only makes sense after the reply (a bare "yes", for example).
 
 ## What it costs
 
@@ -138,7 +141,7 @@ The last option is sent to the classifier with every request. A couple of lines 
 - **Managed organizations.** Where an organization manages Claude Code, some hooks do not run for plugins a person installs. Model and effort still change; the model name in the system prompt may not be corrected.
 - **The classifier is a language model.** It can misjudge a request. Between two tiers it is told to pick the higher one, since too little means work to redo. The journal is there to check it.
 - **The tier scale is written for Haiku 5.5, Sonnet 5.5, Opus 5.5 and Fable 5.2.** When new models arrive, `TIERS` and the effort table in `hooks/tiers.ts` need updating. Tiers that use a model your plan does not include will not work.
-- **The journal is never pruned.** One small file per day; each line holds the first 160 characters of a request and the working folder.
+- **The journal is never pruned.** One small file per session and day; each line holds the first 160 characters of a request and the working folder.
 
 ## Contributing
 

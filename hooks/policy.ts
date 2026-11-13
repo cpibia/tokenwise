@@ -205,3 +205,13 @@ export function isConfirmation(text: string): boolean {
 
   return words.length > 0 && words.length <= CONFIRMATION_MAX_WORDS && words.every(word => CONFIRMATION_WORDS.has(word))
 }
+
+/** Only a reply that ends by asking or proposing something leaves a go-ahead to give. */
+export function awaitsGoAhead(reply: string, pendingQuestion: string): boolean {
+  if (pendingQuestion.trim()) {
+    return true
+  }
+  const lastLine = reply.trim().split('\n').filter(line => line.trim()).at(-1) ?? ''
+
+  return lastLine.includes('?')
+}

@@ -68,7 +68,7 @@ test('a light question on an Opus session runs on Haiku', async ($, on) => {
   on('turn.step', async function* (_, e) {
     steppedWith = e.model
 
-    return { turnId: e.turnId, index: e.index, answer: '', toolUses: [] }
+    return { turnId: e.turnId, index: e.index, answer: '', toolUses: [], stopReason: null, usage: null }
   })
   on('session.surfaces', () => ({ value: ['terminal' as const] }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
@@ -99,7 +99,7 @@ test('everyday work opening an Opus session runs on Sonnet', async ($, on) => {
   on('turn.step', async function* (_, e) {
     steppedWith = `${e.model} ${e.effort}`
 
-    return { turnId: e.turnId, index: e.index, answer: '', toolUses: [] }
+    return { turnId: e.turnId, index: e.index, answer: '', toolUses: [], stopReason: null, usage: null }
   })
   on('session.surfaces', () => ({ value: ['terminal' as const] }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))

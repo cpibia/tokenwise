@@ -2,12 +2,14 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { type AssessmentInput, type Language, buildPrompt, buildSystem, parseAssessment } from './assessor'
 import { COPY, type Copy } from './copy'
-import { journalPath, record } from './journal'
+import { type EvaluationResult, parseCases, seedCases, summarize } from './evaluation'
+import { journalDirectory, journalPath, record } from './journal'
 import {
   type Assessment,
   type Plan,
   type SessionView,
   CHEAP_SWITCH_MAX_CONTEXT,
+  awaitsGoAhead,
   currentLevel,
   freshStartReason,
   isConfirmation,
@@ -35,6 +37,9 @@ const RESTART_DELAY_MS = 100
 const CLASSIFIER_TIMEOUT_MS = 20_000
 const CLASSIFIER_MAX_TOKENS = 300
 const PERSON_ORIGINS = new Set(['composer', 'bridge', 'sdk'])
+const EVALUATION_FILE = 'eval.jsonl'
+const EVALUATION_CONCURRENCY = 4
+const JOURNAL_FILE = /^\d{4}-\d{2}-\d{2}(\..+)?\.jsonl$/
 const FRESH_START_THRESHOLDS: Record<string, number> = { off: 0, '80k': 80_000, '120k': 120_000, '160k': 160_000 }
 
 type Settings = {
@@ -324,12 +329,61 @@ function remember(tier: TierId): void {
   }
 }
 
+async function evaluate($: EngineInterface): Promise<string> {
+  const text = await copy($)
+  const directory = await journalDirectory($)
+  const path = `${directory}/${EVALUATION_FILE}`
+  if (!(await $.fs.exists(path))) {
+    return text.evaluationMissing(path)
+  }
+  const { cases, invalid } = parseCases(String(await $.fs.read(path)), settings.profile)
+  if (cases.length === 0) {
+    return text.evaluationEmpty(path)
+  }
+
+  const results: (EvaluationResult & { line: number; reason: string })[] = []
+  let cursor = 0
+  const work = async () => {
+    for (let index = cursor++; index < cases.length; index = cursor++) {
+      const { line, input, expected } = cases[index]!
+      const assessment = await assess($, input)
+      results[index] = { line, expected, assessed: assessment?.tier ?? null, reason: assessment?.reason ?? '' }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(EVALUATION_CONCURRENCY, cases.length) }, work))
+
+  const stamp = new Date(await $.clock.now()).toISOString().replace(/[:.]/g, '-')
+  const report = `${directory}/eval-${stamp}.jsonl`
+  await $.fs.write(report, `${results.map(result => JSON.stringify(result)).join('\n')}\n`)
+
+  return text.evaluation(summarize(results), invalid, report)
+}
+
+async function seedEvaluation($: EngineInterface): Promise<string> {
+  const text = await copy($)
+  const directory = await journalDirectory($)
+  const path = `${directory}/${EVALUATION_FILE}`
+  if (await $.fs.exists(path)) {
+    return text.seedExists(path)
+  }
+  const entries = (await $.fs.exists(directory)) ? await $.fs.list(directory) : []
+  const journals = entries.filter(entry => entry.kind === 'file' && JOURNAL_FILE.test(entry.name))
+  const journal = (await Promise.all(journals.map(entry => $.fs.read(`${directory}/${entry.name}`)))).map(String).join('\n')
+  const seeded = seedCases(journal)
+  if (!seeded) {
+    return text.seedEmpty
+  }
+  await $.fs.write(path, seeded)
+
+  return text.seeded(seeded.trim().split('\n').length, path)
+}
+
 export const register: Register = (on, options) => {
   settings = readSettings(options as Record<string, unknown>)
   resolvedLanguage = null
 
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: 'tokenwise', description: (await copy($)).command, argumentHint: 'on | off | reset | status' })
+    await $.command.register({ name: 'tokenwise', description: (await copy($)).command, argumentHint: 'on | off | reset | status | eval [seed]' })
 
     return next(e)
   })
@@ -366,9 +420,15 @@ export const register: Register = (on, options) => {
 
       return { text: text.reset }
     }
+    if (argument === 'eval') {
+      return { text: await evaluate($) }
+    }
+    if (argument === 'eval seed') {
+      return { text: await seedEvaluation($) }
+    }
     const level = session.active ? displayName(session.active.model, session.active.effort) : null
 
-    return { text: text.state(session.enabled, level, await journalPath($, await $.clock.now())) }
+    return { text: text.state(session.enabled, level, await journalPath($, await $.clock.now(), await $.session.id())) }
   })
 
   on('prompt.submit', async ($, e, next) => {
@@ -395,13 +455,14 @@ export const register: Register = (on, options) => {
     }
 
     const previousTier = session.recentTiers.at(-1) ?? null
-    if (!isResubmit && isConfirmation(request) && previousTier !== null && previousTier > MECHANICAL_TIER) {
+    const tail = await conversationTail($)
+    const isGoAhead = isConfirmation(request) && awaitsGoAhead(tail.reply, tail.question)
+    if (!isResubmit && isGoAhead && previousTier !== null && previousTier > MECHANICAL_TIER) {
       await record($, { kind: 'request', text: request, tier: previousTier, outcome: 'confirmation: level kept' })
 
       return next(e)
     }
 
-    const tail = await conversationTail($)
     const assessment = await assess($, {
       kind: 'request',
       request,
@@ -461,6 +522,11 @@ export const register: Register = (on, options) => {
   }).catch(($, e, next) => next(e))
 
   on('turn.complete', async ($, e, next) => {
+    if (e.agentId) {
+      subagentEfforts.delete(e.agentId)
+
+      return next(e)
+    }
     session.lastActivityAt = await $.clock.now()
 
     return next(e)
