@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="372" viewBox="0 0 880 372" role="img" aria-labelledby="title desc">
+  <title id="title">tokenwise in a session started on Opus</title>
+  <desc id="desc">Five requests in a row. "what day is it?" is tier 2 and runs on Haiku at medium effort. "add validation to the login form" is tier 5 and goes back to Opus at medium effort. "which files did you touch?" is tier 2 but stays on Opus while it waits for a second light request. "and where is the test?" is tier 2 and moves down to Haiku. "it doesn't work, redo it" is tier 6 and runs on Opus at high effort.</desc>
+  <style>
+    .card { fill: #fbfaf8; stroke: #e4e0d8; }
+    .rule { stroke: #ece8e1; }
+    .head { fill: #8a857c; font: 600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: .08em; }
+    .prompt { fill: #26241f; font: 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .caret { fill: #b4aea4; font: 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .note { fill: #6f6a61; font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .cell { fill: #ece8e1; }
+    .on { fill: #8a857c; }
+    .num { fill: #26241f; font: 600 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .chip-text { fill: #ffffff; font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .haiku { fill: #3f8f6b; }
+    .opus { fill: #c4643f; }
+    .up { fill: #c4643f; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #1d1c1a; stroke: #34322e; }
+      .rule { stroke: #2c2a27; }
+      .head { fill: #8f897f; }
+      .prompt { fill: #ece9e3; }
+      .caret { fill: #6b665e; }
+      .note { fill: #a39d93; }
+      .cell { fill: #34322e; }
+      .on { fill: #b9b2a6; }
+      .num { fill: #ece9e3; }
+      .haiku { fill: #4fa37d; }
+      .opus { fill: #d4734d; }
+      .up { fill: #e08a66; }
+    }
+  </style>
+
+  <rect class="card" x="0.5" y="0.5" width="879" height="371" rx="12"/>
+
+  <text class="head" x="32" y="40">YOU TYPE</text>
+  <text class="head" x="360" y="40">TIER</text>
+  <text class="head" x="512" y="40">RUNS ON</text>
+  <text class="head" x="660" y="40">WHY</text>
+  <line class="rule" x1="24" y1="56" x2="856" y2="56"/>
+
+  <g transform="translate(0 92)">
+    <text class="caret" x="32" y="5">&gt;</text>
+    <text class="prompt" x="50" y="5">what day is it?</text>
+    <g transform="translate(360 -7)">
+      <rect class="cell on" x="0" width="12" height="14" rx="2"/><rect class="cell on" x="15" width="12" height="14" rx="2"/>
+      <rect class="cell" x="30" width="12" height="14" rx="2"/><rect class="cell" x="45" width="12" height="14" rx="2"/>
+      <rect class="cell" x="60" width="12" height="14" rx="2"/><rect class="cell" x="75" width="12" height="14" rx="2"/>
+      <rect class="cell" x="90" width="12" height="14" rx="2"/><rect class="cell" x="105" width="12" height="14" rx="2"/>
+    </g>
+    <text class="num" x="480" y="5">2</text>
+    <rect class="haiku" x="512" y="-13" width="128" height="26" rx="13"/>
+    <text class="chip-text" x="576" y="5" text-anchor="middle">Haiku · medium</text>
+    <text class="note" x="660" y="5">quick question</text>
+  </g>
+  <line class="rule" x1="24" y1="122" x2="856" y2="122"/>
+
+  <g transform="translate(0 152)">
+    <text class="caret" x="32" y="5">&gt;</text>
+    <text class="prompt" x="50" y="5">add validation to the login form</text>
+    <g transform="translate(360 -7)">
+      <rect class="cell on" x="0" width="12" height="14" rx="2"/><rect class="cell on" x="15" width="12" height="14" rx="2"/>
+      <rect class="cell on" x="30" width="12" height="14" rx="2"/><rect class="cell on" x="45" width="12" height="14" rx="2"/>
+      <rect class="cell on" x="60" width="12" height="14" rx="2"/><rect class="cell" x="75" width="12" height="14" rx="2"/>
+      <rect class="cell" x="90" width="12" height="14" rx="2"/><rect class="cell" x="105" width="12" height="14" rx="2"/>
+    </g>
+    <text class="num" x="480" y="5">5</text>
+    <rect class="opus" x="512" y="-13" width="128" height="26" rx="13"/>
+    <text class="chip-text" x="576" y="5" text-anchor="middle">Opus · medium</text>
+    <text class="note" x="660" y="5">real work, back to Opus</text>
+  </g>
+  <line class="rule" x1="24" y1="182" x2="856" y2="182"/>
+
+  <g transform="translate(0 212)">
+    <text class="caret" x="32" y="5">&gt;</text>
+    <text class="prompt" x="50" y="5">which files did you touch?</text>
+    <g transform="translate(360 -7)">
+      <rect class="cell on" x="0" width="12" height="14" rx="2"/><rect class="cell on" x="15" width="12" height="14" rx="2"/>
+      <rect class="cell" x="30" width="12" height="14" rx="2"/><rect class="cell" x="45" width="12" height="14" rx="2"/>
+      <rect class="cell" x="60" width="12" height="14" rx="2"/><rect class="cell" x="75" width="12" height="14" rx="2"/>
+      <rect class="cell" x="90" width="12" height="14" rx="2"/><rect class="cell" x="105" width="12" height="14" rx="2"/>
+    </g>
+    <text class="num" x="480" y="5">2</text>
+    <rect class="opus" x="512" y="-13" width="128" height="26" rx="13"/>
+    <text class="chip-text" x="576" y="5" text-anchor="middle">Opus · medium</text>
+    <text class="note" x="660" y="5">waits for a second one</text>
+  </g>
+  <line class="rule" x1="24" y1="242" x2="856" y2="242"/>
+
+  <g transform="translate(0 272)">
+    <text class="caret" x="32" y="5">&gt;</text>
+    <text class="prompt" x="50" y="5">and where is the test?</text>
+    <g transform="translate(360 -7)">
+      <rect class="cell on" x="0" width="12" height="14" rx="2"/><rect class="cell on" x="15" width="12" height="14" rx="2"/>
+      <rect class="cell" x="30" width="12" height="14" rx="2"/><rect class="cell" x="45" width="12" height="14" rx="2"/>
+      <rect class="cell" x="60" width="12" height="14" rx="2"/><rect class="cell" x="75" width="12" height="14" rx="2"/>
+      <rect class="cell" x="90" width="12" height="14" rx="2"/><rect class="cell" x="105" width="12" height="14" rx="2"/>
+    </g>
+    <text class="num" x="480" y="5">2</text>
+    <rect class="haiku" x="512" y="-13" width="128" height="26" rx="13"/>
+    <text class="chip-text" x="576" y="5" text-anchor="middle">Haiku · medium</text>
+    <text class="note" x="660" y="5">second in a row: down</text>
+  </g>
+  <line class="rule" x1="24" y1="302" x2="856" y2="302"/>
+
+  <g transform="translate(0 332)">
+    <text class="caret" x="32" y="5">&gt;</text>
+    <text class="prompt" x="50" y="5">it doesn't work, redo it</text>
+    <g transform="translate(360 -7)">
+      <rect class="cell on" x="0" width="12" height="14" rx="2"/><rect class="cell on" x="15" width="12" height="14" rx="2"/>
+      <rect class="cell on" x="30" width="12" height="14" rx="2"/><rect class="cell on" x="45" width="12" height="14" rx="2"/>
+      <rect class="cell on" x="60" width="12" height="14" rx="2"/><rect class="up" x="75" width="12" height="14" rx="2"/>
+      <rect class="cell" x="90" width="12" height="14" rx="2"/><rect class="cell" x="105" width="12" height="14" rx="2"/>
+    </g>
+    <text class="num" x="480" y="5">6</text>
+    <rect class="opus" x="512" y="-13" width="128" height="26" rx="13"/>
+    <text class="chip-text" x="576" y="5" text-anchor="middle">Opus · high</text>
+    <text class="note" x="660" y="5">a redo runs one tier up</text>
+  </g>
+</svg>

@@ -6,6 +6,8 @@
 
 **Spend tokens where the work needs them.** tokenwise is a Claude Code plugin that sizes every request before it runs and sets model and effort to match: a quick question goes to Haiku, a hard diagnosis to Opus at high effort, and a botched result is redone one level up.
 
+<p align="center"><img src=".github/assets/session.svg" alt="Five requests in a session started on Opus: a quick question runs on Haiku, real work goes back to Opus, a redo runs one tier up" width="880"></p>
+
 ```
 /plugin install tokenwise --marketplace cpibia/tokenwise
 ```
