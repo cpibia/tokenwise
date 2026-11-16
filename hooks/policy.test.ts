@@ -24,7 +24,7 @@ function sessionOn(model: string, overrides: Partial<SessionView> = {}): Session
 }
 
 function assessed(tier: Assessment['tier'], extra: Partial<Assessment> = {}): Assessment {
-  return { tier, reason: '', newTopic: false, rework: false, ...extra }
+  return { tier, reason: '', newTopic: false, taskDone: false, rework: false, ...extra }
 }
 
 describe('targetTier', () => {
@@ -156,10 +156,16 @@ describe('plan', () => {
 })
 
 describe('freshStartReason', () => {
-  const base = { contextTokens: 150_000, threshold: 120_000, newTopic: false, idleMs: 0 }
+  const base = { contextTokens: 150_000, threshold: 120_000, newTopic: false, taskDone: false, idleMs: 0 }
 
   test('a new topic over a large context', () => {
     expect(freshStartReason({ ...base, newTopic: true })).toBe('new-topic')
+  })
+
+  test('the next task after a finished one over a large context', () => {
+    expect(freshStartReason({ ...base, taskDone: true })).toBe('task-done')
+    expect(freshStartReason({ ...base, taskDone: true, newTopic: true })).toBe('new-topic')
+    expect(freshStartReason({ ...base, contextTokens: 50_000, taskDone: true })).toBe(null)
   })
 
   test('a return after the cache expired', () => {
@@ -204,10 +210,11 @@ describe('awaitsGoAhead', () => {
 
 describe('parseAssessment', () => {
   test('reads JSON wrapped in prose', () => {
-    expect(parseAssessment('Sure: {"tier": 5, "reason": "new feature.", "newTopic": true, "rework": false}')).toEqual({
+    expect(parseAssessment('Sure: {"tier": 5, "reason": "new feature.", "newTopic": true, "taskDone": true, "rework": false}')).toEqual({
       tier: 5,
       reason: 'new feature',
       newTopic: true,
+      taskDone: true,
       rework: false,
     })
   })

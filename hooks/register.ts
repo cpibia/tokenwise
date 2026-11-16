@@ -6,6 +6,7 @@ import { type EvaluationResult, parseCases, seedCases, summarize } from './evalu
 import { journalDirectory, journalPath, record } from './journal'
 import {
   type Assessment,
+  type FreshStartReason,
   type Plan,
   type SessionView,
   CHEAP_SWITCH_MAX_CONTEXT,
@@ -277,7 +278,7 @@ async function carryOut($: EngineInterface, decision: Plan, assessment: Assessme
 
 type FreshChoice = 'clear' | 'compact' | 'carry-on' | 'mute'
 
-async function offerFreshStart($: EngineInterface, reason: 'new-topic' | 'idle', tokens: number): Promise<FreshChoice> {
+async function offerFreshStart($: EngineInterface, reason: FreshStartReason, tokens: number): Promise<FreshChoice> {
   const text = await copy($)
   const options = reason === 'new-topic' ? [text.clearAndGo, text.compactAndGo, text.carryOn, text.mute] : [text.compactAndGo, text.clearAndGo, text.carryOn, text.mute]
   try {
@@ -479,7 +480,7 @@ export const register: Register = (on, options) => {
 
     const tokens = (await $.session.usage()).context.tokens ?? 0
     if (!isResubmit) {
-      const reason = freshStartReason({ contextTokens: tokens, threshold: settings.freshStartTokens, newTopic: assessment.newTopic, idleMs })
+      const reason = freshStartReason({ contextTokens: tokens, threshold: settings.freshStartTokens, newTopic: assessment.newTopic, taskDone: assessment.taskDone, idleMs })
       if (reason) {
         const choice = await offerFreshStart($, reason, tokens)
         await record($, { kind: 'fresh-start', text: request, tier: assessment.tier, reason, outcome: choice, contextTokens: tokens })

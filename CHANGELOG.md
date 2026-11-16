@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Fixed
+
+- The offer to compact or clear a long context now also comes when a task has been brought to its end (sent, published, committed, deployed) and the next request starts another task in the same project. Before, it came only for unrelated work or after an hour away, so a long session working through one project task after another was never offered it.
+
 ## [1.1.0] - 2026-11-13
 
 ### Added

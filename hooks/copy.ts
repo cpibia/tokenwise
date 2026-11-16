@@ -59,7 +59,9 @@ export const COPY: Record<Language, Copy> = {
     fresh: (reason, thousands) =>
       reason === 'new-topic'
         ? `This looks like a new task, and the conversation carries about ${thousands}k tokens that every step re-reads. Start clean?`
-        : `You were away for over an hour: the cache has expired and the next step re-reads about ${thousands}k tokens at full price. Start clean?`,
+        : reason === 'task-done'
+          ? `The last task is done, and the conversation carries about ${thousands}k tokens that every step re-reads. Compact before the next one?`
+          : `You were away for over an hour: the cache has expired and the next step re-reads about ${thousands}k tokens at full price. Start clean?`,
     clearAndGo: 'Clear and send the request',
     compactAndGo: 'Compact and send the request',
     carryOn: 'Carry on as is',
@@ -105,7 +107,9 @@ export const COPY: Record<Language, Copy> = {
     fresh: (reason, thousands) =>
       reason === 'new-topic'
         ? `Sembra un lavoro nuovo, e la conversazione porta circa ${thousands}k token che ogni passo rilegge. Ricominci pulito?`
-        : `Sei stato via più di un'ora: la cache è scaduta e il prossimo passo rilegge circa ${thousands}k token a prezzo pieno. Ricominci pulito?`,
+        : reason === 'task-done'
+          ? `Il compito precedente è chiuso, e la conversazione porta circa ${thousands}k token che ogni passo rilegge. Compatti prima del prossimo?`
+          : `Sei stato via più di un'ora: la cache è scaduta e il prossimo passo rilegge circa ${thousands}k token a prezzo pieno. Ricominci pulito?`,
     clearAndGo: 'Pulisci e invia la richiesta',
     compactAndGo: 'Compatta e invia la richiesta',
     carryOn: 'Continua così',

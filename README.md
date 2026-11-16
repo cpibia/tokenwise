@@ -19,7 +19,7 @@ Most Claude Code users pick one model and leave it there. Then a "what day is it
 tokenwise works on both levers:
 
 - **the right model and effort for each request**, chosen by a small classifier call before the work starts;
-- **a lighter context**, by offering `/clear` or `/compact` at the moments where dropping the history costs nothing: a new, unrelated task, or a return after the prompt cache has expired.
+- **a lighter context**, by offering `/clear` or `/compact` at the moments where dropping the history costs nothing: a new task, the next one after a finished task, or a return after the prompt cache has expired.
 
 ## What it looks like
 
@@ -82,7 +82,7 @@ Requires a Claude Code release with plugin function hooks, and access to the mod
 
 **Respects "keep".** Answer a model question with the level in use and tokenwise stops proposing a stronger model for that session, except to redo failed work. Effort still follows the work, up to that model's ceiling.
 
-**Offers a clean start.** When the context is above a threshold (120k tokens by default) and the request starts unrelated work, or you come back after more than an hour and the cache has expired, it asks whether to clear or compact first. Either way your request is sent right after, in the lighter session.
+**Offers a clean start.** When the context is above a threshold (120k tokens by default) and the request starts unrelated work or the next task after a finished one, or you come back after more than an hour and the cache has expired, it asks whether to clear or compact first. Either way your request is sent right after, in the lighter session.
 
 **Sizes generic subagents.** `general-purpose`, `Explore`, `Plan` and `claude` subagents start without the conversation, so choosing their model costs nothing: tokenwise picks it from the brief, up to Opus · high. A model the session chose for a subagent is kept and only its effort is set. Subagent types that declare their own model are left alone.
 

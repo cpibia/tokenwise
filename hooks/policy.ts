@@ -16,6 +16,7 @@ export type Assessment = {
   tier: TierId
   reason: string
   newTopic: boolean
+  taskDone: boolean
   rework: boolean
 }
 
@@ -164,19 +165,21 @@ function planMove(view: SessionView, current: { model: string; effort: Effort | 
   return { kind: 'apply', tier, level, note: isLowering ? 'effort lowered' : 'effort raised' }
 }
 
-export type FreshStartReason = 'new-topic' | 'idle'
+export type FreshStartReason = 'new-topic' | 'task-done' | 'idle'
 
 export const IDLE_MS = 60 * 60 * 1000
 
 /**
  * Whether to offer a fresh start before this request. Re-reading a long conversation is
- * where most tokens go, so a new topic over a large context is the moment to drop it; after
- * an hour away the prompt cache has expired anyway and the whole context is paid again.
+ * where most tokens go, so a new topic or the next task after a finished one, over a large
+ * context, is the moment to drop it; after an hour away the prompt cache has expired anyway
+ * and the whole context is paid again.
  */
 export function freshStartReason(input: {
   contextTokens: number
   threshold: number
   newTopic: boolean
+  taskDone: boolean
   idleMs: number
 }): FreshStartReason | null {
   if (input.threshold <= 0 || input.contextTokens < input.threshold) {
@@ -184,6 +187,9 @@ export function freshStartReason(input: {
   }
   if (input.newTopic) {
     return 'new-topic'
+  }
+  if (input.taskDone) {
+    return 'task-done'
   }
 
   return input.idleMs >= IDLE_MS ? 'idle' : null

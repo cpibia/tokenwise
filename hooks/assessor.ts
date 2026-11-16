@@ -48,6 +48,7 @@ Rules:
 - Between two tiers, pick the higher one.
 - Requests are often hurried and have typos; they may be in any language.
 - "newTopic": true only if the request starts work unrelated to the excerpt of the conversation (a different project, file set or problem). Follow-ups, fixes and next steps of the same work are false. With no excerpt, false.
+- "taskDone": true if the excerpt shows a task brought to its end (sent, submitted, published, committed, deployed, delivered, or closed with a final summary) and the request moves on: another task, even in the same project, or asking what to do next. A fix or a question about that result, or a go-ahead to something the excerpt proposes, is false. With no excerpt, false.
 - "rework": true only if the request says the last result is wrong, broken, incomplete or must be redone.`,
   it: `Valuti il lavoro che una richiesta a Claude Code mette in moto. Claude Code lavora sulle macchine dell'utente con shell, file, git, web e strumenti collegati. Scegli il livello PIÙ ECONOMICO che fa il lavoro bene al primo colpo: rifare un lavoro sbagliato costa più di un modello più forte.
 
@@ -57,12 +58,13 @@ Regole:
 - Tra due livelli, scegli il più alto.
 - Le richieste sono spesso scritte in fretta e con refusi, in qualsiasi lingua.
 - "newTopic": true solo se la richiesta avvia un lavoro scollegato dall'estratto della conversazione (altro progetto, altri file, altro problema). Seguiti, correzioni e passi successivi dello stesso lavoro sono false. Senza estratto, false.
+- "taskDone": true se l'estratto mostra un compito arrivato in fondo (inviato, pubblicato, committato, rilasciato, consegnato o chiuso con un riepilogo finale) e la richiesta passa ad altro: un altro compito, anche nello stesso progetto, o chiedere cosa fare dopo. Una correzione o una domanda su quel risultato, o un via libera a qualcosa che l'estratto propone, è false. Senza estratto, false.
 - "rework": true solo se la richiesta dice che l'ultimo risultato è sbagliato, rotto, incompleto o da rifare.`,
 }
 
 const SUBAGENT_RULES: Record<Language, string> = {
-  en: `You size the work in a brief that a Claude Code session wrote for a subagent, which carries it out without seeing the conversation. Pick the CHEAPEST tier that gets it right the first time. Searching, reading and listing files is cheap even when the brief is long; what counts is the judgment needed and the cost of a mistake. "newTopic" and "rework" are always false.`,
-  it: `Valuti il lavoro descritto nel brief che una sessione di Claude Code ha scritto per un sotto-agente, che lo esegue senza vedere la conversazione. Scegli il livello PIÙ ECONOMICO che lo fa bene al primo colpo. Cercare, leggere ed elencare file costa poco anche con un brief lungo; contano il giudizio richiesto e il costo di un errore. "newTopic" e "rework" sono sempre false.`,
+  en: `You size the work in a brief that a Claude Code session wrote for a subagent, which carries it out without seeing the conversation. Pick the CHEAPEST tier that gets it right the first time. Searching, reading and listing files is cheap even when the brief is long; what counts is the judgment needed and the cost of a mistake. "newTopic", "taskDone" and "rework" are always false.`,
+  it: `Valuti il lavoro descritto nel brief che una sessione di Claude Code ha scritto per un sotto-agente, che lo esegue senza vedere la conversazione. Scegli il livello PIÙ ECONOMICO che lo fa bene al primo colpo. Cercare, leggere ed elencare file costa poco anche con un brief lungo; contano il giudizio richiesto e il costo di un errore. "newTopic", "taskDone" e "rework" sono sempre false.`,
 }
 
 const LABELS: Record<Language, { tiers: string; profile: string; excerpt: string; asked: string; previous: string; request: string; brief: string; answer: string }> = {
@@ -100,7 +102,7 @@ export function buildSystem(language: Language, kind: AssessmentInput['kind'], p
 ${labels.tiers}:
 ${scale}${note}
 
-${labels.answer}: {"tier": <1-8>, "reason": "<12 words at most>", "newTopic": <true|false>, "rework": <true|false>}`
+${labels.answer}: {"tier": <1-8>, "reason": "<12 words at most>", "newTopic": <true|false>, "taskDone": <true|false>, "rework": <true|false>}`
 }
 
 export function buildPrompt(language: Language, input: AssessmentInput): string {
@@ -139,6 +141,7 @@ export function parseAssessment(answer: string): Assessment | null {
       tier,
       reason: typeof parsed.reason === 'string' ? parsed.reason.trim().replace(/\.$/, '') : '',
       newTopic: parsed.newTopic === true,
+      taskDone: parsed.taskDone === true,
       rework: parsed.rework === true,
     }
   } catch {
