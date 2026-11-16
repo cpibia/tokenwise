@@ -42,6 +42,7 @@ All notable changes to this project are documented in this file. The format foll
 - Local decision journal, the `/tokenwise` command and the `~` prefix to skip one request.
 - English and Italian interface.
 
-[Unreleased]: https://github.com/cpibia/tokenwise/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/cpibia/tokenwise/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/cpibia/tokenwise/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/cpibia/tokenwise/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/cpibia/tokenwise/releases/tag/v1.0.0
