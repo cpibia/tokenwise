@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/compare-usage.sh` compares cost per request, context re-read and model calls before and after installing tokenwise, from the local Claude Code transcripts, over two windows of equal days or equal requests.
+
 ## [1.1.1] - 2026-11-16
 
 ### Fixed

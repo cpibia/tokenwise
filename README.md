@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/cpibia/tokenwise/actions/workflows/ci.yml/badge.svg)](https://github.com/cpibia/tokenwise/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/cpibia/tokenwise)](LICENSE)
-[![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#install)
+[![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-2f5be8)](#install)
 
 **Spend tokens where the work needs them.** tokenwise is a Claude Code plugin that sizes every request before it runs and sets model and effort to match: a quick question goes to Haiku, a hard diagnosis to Opus at high effort, and a botched result is redone one level up.
 
@@ -122,6 +122,16 @@ The last option is sent to the classifier with every request. A couple of lines 
 - **Start sessions on Sonnet** if most of your work is everyday coding. tokenwise offers Opus when a request needs it, and on the first working request of a session the switch is cheap.
 - **Read the journal** after a few days. A `reason` you disagree with is a misjudged tier; the "Your work and tools" option is the quickest way to correct it.
 - **Measure before and after a change.** Label a few dozen requests once with `/tokenwise eval seed`, then run `/tokenwise eval` before and after editing "Your work and tools" or switching the classifier model. Below the label means work that may need redoing; above it means spend the work did not need. Seeded lines hold only the first 160 characters of each request and none of the conversation before it, so add `"previousReply"` to a line when the request only makes sense after the reply (a bare "yes", for example).
+
+## What it saves
+
+Measured on the author's own Claude Code use, over the same number of typed requests before and after installing it (774 each), at list prices and with the classifier calls included: the average cost per request fell by 47%. The two largest changes were that each model call re-read about half as much context, and that a request took a fifth fewer model calls.
+
+That is one developer's mix of work, not a promise for yours. To run the same comparison on your own transcripts once you have a few hundred requests with tokenwise:
+
+```
+scripts/compare-usage.sh --requests 300
+```
 
 ## What it costs
 
